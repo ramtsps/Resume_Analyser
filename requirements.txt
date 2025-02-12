@@ -12,3 +12,4 @@ streamlit-tags
 Pillow
 yt-dlp
 nltk
+streamlit-option-menu
