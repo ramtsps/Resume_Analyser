@@ -1,0 +1,14 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+# 🛑 Ignore Python bytecode files
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 🛑 Ignore Virtual Environments
+venv/
+env/
+*.env
+
+
