@@ -23,13 +23,24 @@ import yt_dlp
 import plotly.express as px
 import hashlib
 from streamlit_option_menu import option_menu
+import smtplib
+from email.message import EmailMessage
 
 # import youtube_dl
+st.set_page_config(
+    page_title="Smart Resume Analyzer",
+    page_icon='./Logo/trans_bg.png',
+)
 
+# st.set_page_config(page_title="Smart Resume Analyzer", page_icon="📄", layout="wide")
 connection = sqlite3.connect("db.sqlite3")
 cursor = connection.cursor()
 
+#stylesheet
 
+
+
+#end of stylesheet
 
 #new function
 
@@ -45,6 +56,17 @@ cursor.execute("""
     );
 """)
 connection.commit()
+
+# Function to Check Password Strength
+def check_password_strength(password):
+    if len(password) < 6:
+        return "❌ Weak Password: Must be at least 6 characters."
+    elif not any(char.isdigit() for char in password):
+        return "⚠️ Medium Password: Add at least one number."
+    elif not any(char.isupper() for char in password):
+        return "✅ Strong Password!"
+    else:
+        return "💪 Very Strong Password!"
 
 # Function to Hash Passwords
 def hash_password(password):
@@ -63,6 +85,63 @@ def register_user(name, email, password):
         return True
     except sqlite3.IntegrityError:
         return False  # Email already exists
+    
+def send_email(name, email, subject, message):
+    admin_email = "tspsparasuram@gmail.com"  # Change to your admin email
+    sender_email = "parasuramtsps6@gmail.com"  # Change to your email
+    sender_password = "oqzu bmif rtop xrvy"  # Use an App Password (Not your real password)
+
+    msg = EmailMessage()
+    msg["Subject"] = f"📩 New Contact Form Submission: {subject}"
+    msg["From"] = sender_email
+    msg["To"] = admin_email
+
+    # 🌟 Beautiful HTML Email Format
+    msg.set_content(f"""
+    New Contact Form Submission:
+    
+    - Name: {name}
+    - Email: {email}
+    - Subject: {subject}
+    - Message: {message}
+    
+    Please respond at your earliest convenience.
+    """)  # Plain Text Version
+
+    msg.add_alternative(f"""
+    <html>
+        <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px;">
+            <div style="max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);">
+                <h2 style="text-align: center; color: #1e88e5;">📩 New Contact Form Submission</h2>
+                <p style="font-size: 16px;"><b>Name:</b> {name}</p>
+                <p style="font-size: 16px;"><b>Email:</b> {email}</p>
+                <p style="font-size: 16px;"><b>Subject:</b> {subject}</p>
+                <p style="font-size: 16px;"><b>Message:</b></p>
+                <div style="background: #e3f2fd; padding: 15px; border-radius: 5px;">
+                    <p style="font-size: 14px;">{message}</p>
+                </div>
+                <br>
+                <p style="text-align: center; font-size: 14px; color: #555;">
+                    📩 Please respond at your earliest convenience.
+                </p>
+                <p style="text-align: center;">
+                    <a href="mailto:{email}" style="background: #1e88e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">
+                        📧 Reply to {name}
+                    </a>
+                </p>
+            </div>
+        </body>
+    </html>
+    """, subtype="html")  # HTML Version
+
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:  # Gmail SMTP server
+            server.login(sender_email, sender_password)
+            server.send_message(msg)
+        return True
+    except Exception as e:
+        print(f"❌ Failed to send email. Error: {e}")
+        return False
 
 # Login Function
 def login_user(email, password):
@@ -165,10 +244,6 @@ def insert_data(name, email, res_score, timestamp, no_of_pages, reco_field, cand
     connection.commit()
 
 
-st.set_page_config(
-    page_title="Smart Resume Analyzer",
-    page_icon='./Logo/trans_bg.png',
-)
 
 if "logged_in" not in st.session_state:
     st.session_state["logged_in"] = False
@@ -179,13 +254,13 @@ if "user_email" not in st.session_state:
 
 def run():
     
-    img = Image.open("./Logo/trans_bg.png")
+    # img = Image.open("./Logo/trans_bg.png")
 
-    col1, col2 = st.columns([1, 4])
-    with col1:
-        st.image(img, width=100)  # Logo
-    with col2:
-        st.title("Smart Resume Analyzer")
+    # col1, col2 = st.columns([1, 4])
+    # with col1:
+    #     st.image(img, width=100)  # Logo
+    # with col2:
+    #     st.title("Smart Resume Analyzer")
 
     # ✅ Sidebar Navigation using option_menu
 
@@ -323,65 +398,266 @@ def run():
 
 
     if choice == "🏠 Home":
-        st.subheader("Welcome to Smart Resume Analyzer! 🎯")
-        img = Image.open("./Logo/5052521.jpg")
-        img = img.resize((400, 350))  # Resize if needed
-        st.image(img)
-        st.write("""
-        🚀 This tool helps analyze resumes and provides recommendations based on skills.  
-        🔍 It supports **normal users** (resume analysis) and **admin users** (data insights).  
-        📂 Upload a resume and get insights instantly!  
-        """)
+        col1, col2 = st.columns([1, 4])
 
-        # Home Page Image
-        # home_img = Image.open("./Logo/5052521.jpg")  # Ensure this image exists in your project folder
-        # st.image(home_img, use_container_width=True)  # ✅ Updated parameter
+        with col1:
+            img = Image.open("./Logo/trans_bg.png")  # Ensure logo exists in the directory
+            st.image(img, width=100)  # Logo
+
+        with col2:
+            st.title("🚀 Smart Resume Analyzer")
+
+        st.write("---")  # Divider Line
+
+        ## 🌟 Introduction Section
+        with st.container():
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#1e3a8a; color:white; text-align:center;">
+                    <h2>📄 AI-Powered Resume Analysis</h2>
+                    <p>Smart Resume Analyzer is an <b>AI-powered</b> tool that helps <b>job seekers</b> enhance their resumes 
+                    and <b>recruiters</b> find the best candidates.</p>
+                    <p>🔍 <b>Get instant insights & recommendations to make your resume stand out!</b></p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## ✅ Key Features Section
+        st.markdown("<h3 style='text-align: center;'>✅ Key Features</h3>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#4CAF50; color:white; text-align:center;">
+                    <h4>🧠 AI-Powered Resume Scoring</h4>
+                    <p>Get an AI-generated <b>resume score</b> instantly.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#f39c12; color:white; text-align:center;">
+                    <h4>🎯 Personalized Skill Suggestions</h4>
+                    <p>Identify <b>missing skills</b> for your desired job role.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with col3:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#3498db; color:white; text-align:center;">
+                    <h4>📈 Real-time Feedback</h4>
+                    <p>Improve your resume with <b>instant insights</b>.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## 🎯 Benefits Section
+        st.markdown("<h3 style='text-align: center;'>🎯 Why Use Smart Resume Analyzer?</h3>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#e74c3c; color:white; text-align:center;">
+                    <h4>🚀 Save Time</h4>
+                    <p>No more <b>manual resume screening</b>.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#9b59b6; color:white; text-align:center;">
+                    <h4>🔥 Increased Job Success</h4>
+                    <p>Optimize your <b>resume</b> for better job offers.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## 🌟 Testimonials Section
+        st.markdown("<h3 style='text-align: center;'>🌟 What Users Say</h3>", unsafe_allow_html=True)
+        with st.container():
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#2c3e50; color:white; text-align:center;">
+                    <p>⭐ <b>Rahul M.</b> (Software Engineer): "This tool helped me optimize my resume and land an interview within <b>days!</b>"</p>
+                    <p>⭐ <b>Priya K.</b> (Data Scientist): "I loved the <b>instant skill recommendations</b> and resume score feature."</p>
+                    <p>⭐ <b>Hiring Manager, XYZ Company:</b> "Our recruitment time <b>reduced by 40%</b> using Smart Resume Analyzer!"</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## ❓ FAQs Section
+        st.markdown("<h3 style='text-align: center;'>❓ Frequently Asked Questions</h3>", unsafe_allow_html=True)
+        
+        with st.expander("❓ How does Smart Resume Analyzer work?"):
+            st.write("It uses **Machine Learning (ML) & Natural Language Processing (NLP)** to analyze resumes, match skills, and generate recommendations.")
+
+        with st.expander("❓ Can I use it for free?"):
+            st.write("Yes! Our **basic analysis** is free, but premium features offer **more insights & advanced recommendations**.")
+
+        with st.expander("❓ Will my data be safe?"):
+            st.write("Absolutely! **Your resume and personal data are not stored or shared** with anyone.")
+
+        st.write("---")  # Divider Line
+
+        ## 🚀 Call to Action
+        st.success("📢 **Start analyzing your resume today and unlock your career potential!** 🚀")
+
 
     # ✅ Registration Section
     elif choice == "📝 Register":
-        st.subheader("Register New Account 📝")
-        name = st.text_input("Full Name")
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
-        confirm_password = st.text_input("Confirm Password", type="password")
+            st.markdown("## 📝 Register New Account")
+            st.write("Create an account to access the Smart Resume Analyzer.")
+
+        # # 🟢 Layout with Columns for Better UI
+        # # col1, col2 = st.columns([1, 2])
         
-        if st.button("Register"):
-            if password == confirm_password:
-                success = register_user(name, email, password)
-                if success:
-                    st.success("Registration successful! You can now log in.")
+        # with col1:  # Form Fields
+            name = st.text_input("👤 Full Name")
+            email = st.text_input("📧 Email")
+            password = st.text_input("🔒 Password", type="password")
+            confirm_password = st.text_input("🔒 Confirm Password", type="password")
+
+            # Password Strength Indicator
+            if password:
+                st.info(check_password_strength(password))
+
+            # Registration Button
+            if st.button("📝 Register", help="Create a new account"):
+                if password == confirm_password:
+                    success = register_user(name, email, password)
+                    if success:
+                        st.success("✅ Registration successful! You can now log in.")
+                        st.balloons()  # 🎈 Fun Animation
+                    else:
+                        st.error("❌ Email already exists. Try a different one.")
                 else:
-                    st.error("Email already exists. Try a different one.")
-            else:
-                st.error("Passwords do not match!")
-
+                    st.error("⚠️ Passwords do not match!")
+ # 🔑 **Login Page**
     elif choice == "🔑 Login":
-        st.subheader("User Login 🔑")
-        email = st.text_input("Email")
-        password = st.text_input("Password", type="password")
-        
-        if st.button("Login"):
-            user = login_user(email, password)
-            if user:
-                # Store login details in session state
-                st.session_state["logged_in"] = True
-                st.session_state["user_name"] = user[1]  # Store Name
-                st.session_state["user_email"] = user[2]  # Store Email
-                
-                st.success(f"Welcome, {user[1]}! Redirecting to Normal User Dashboard...")
+            st.markdown("## 🔑 User Login")
+            st.write("Log in to access the Smart Resume Analyzer.")
 
-                # Redirect to "Normal User" by setting session state and rerunning app
-                st.session_state["redirect_to"] = "🏠 Home"
-                st.rerun()  # Newer Streamlit versions use this
- 
-            else:
-                st.error("Invalid email or password.")
+        # col1, col2 = st.columns([1, 2])
+        
+        # with col2:  # Form Fields
+            email = st.text_input("📧 Email")
+            password = st.text_input("🔒 Password", type="password")
+
+            if st.button("🔑 Login", help="Access your account"):
+                user = login_user(email, password)
+                if user:
+                    st.session_state["logged_in"] = True
+                    st.session_state["user_name"] = user[1]  # Store Name
+                    st.session_state["user_email"] = user[2]  # Store Email
+                    
+                    st.success(f"✅ Welcome, {user[1]}! Redirecting to Dashboard...")
+
+                    # Loading animation before redirect
+                    with st.spinner("🔄 Redirecting... Please wait."):
+                        time.sleep(2)
+
+                    st.session_state["redirect_to"] = "🏠 Home"
+                    st.rerun()  # Refresh the app to apply changes
+                else:
+                    st.error("❌ Invalid email or password. Please try again.")
 
 
     elif choice == '👤 Normal User' and st.session_state["logged_in"]:
-        # st.markdown('''<h4 style='text-align: left; color: #d73b5c;'>* Upload your resume, and get smart recommendation based on it."</h4>''',
-        #             unsafe_allow_html=True)
-        pdf_file = st.file_uploader("Choose your Resume", type=["pdf"])
+        # ✅ Page Title & Welcome Message
+        st.markdown("## 👤 Welcome to the Smart Resume Analyzer")
+        st.markdown("""
+        🎯 **Your Personal AI Resume Assistant!**  
+        📂 Upload your resume and get **expert-level feedback** to improve your job prospects!  
+        """)
+
+        st.write("---")  # Divider Line
+
+        ## 🌟 **Why Use Smart Resume Analyzer?**
+        st.markdown("### 🌟 Why Use Smart Resume Analyzer?")
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("""
+            ✅ **Get an AI-Powered Resume Score**  
+            ✅ **Discover Missing Skills**  
+            ✅ **Receive Job Role Recommendations**  
+            ✅ **Make Your Resume ATS-Friendly**  
+            """)
+        
+        with col2:
+            st.image("./Logo/5052521.jpg", width=250)  # Ensure this image exists in your project folder
+
+        st.write("---")  # Divider Line
+
+        ## 🔥 **How It Works?**
+        st.markdown("### 🔥 How It Works?")
+        with st.expander("📌 **Click to See How Our AI Analyzes Your Resume**"):
+            st.markdown("""
+            1️⃣ **Upload your Resume (PDF format only)**  
+            2️⃣ **AI scans & analyzes your skills, experience, and resume format**  
+            3️⃣ **Receive a Resume Score & Missing Skills Suggestions**  
+            4️⃣ **Get Personalized Job Role Recommendations**  
+            5️⃣ **Boost Your Hiring Chances with AI-Powered Insights!**
+            """)
+         
+
+        st.write("---")  # Divider Line
+
+        ## 📊 **Latest Job Market Insights**
+        st.markdown("### 📊 Latest Job Market Insights")
+        with st.container():
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.success("💼 **Top In-Demand Skills in 2025:**")
+                st.write("""
+                - **Machine Learning & AI**
+                - **Full Stack Web Development**
+                - **Cybersecurity**
+                - **Cloud Computing**
+                - **Data Science & Analytics**
+                """)
+
+            with col2:
+                st.warning("📢 **Fastest Growing Tech Careers:**")
+                st.write("""
+                - **AI & Robotics Engineer**
+                - **Cloud Architect**
+                - **Data Scientist**
+                - **Blockchain Developer**
+                - **Cybersecurity Analyst**
+                """)
+
+        st.write("---")  # Divider Line
+
+        ## 📂 **Upload Section**
+        st.markdown("### 📂 Upload Your Resume for AI Analysis")
+        st.info("🚀 **Your Resume is Your First Impression – Make it Stand Out!**")
+        pdf_file = st.file_uploader("**Choose a PDF Resume to Upload**", type=["pdf"])
+
         if pdf_file is not None:
             
             # with st.spinner('Uploading your Resume....'):
@@ -675,55 +951,204 @@ def run():
             else:
                 st.error("Wrong ID & Password Provided")
     elif choice == "ℹ️ About":
-        st.subheader("About Smart Resume Analyzer")
-        st.write("""
-        Smart Resume Analyzer is an AI-powered application that helps analyze resumes and provides recommendations 
-        based on skills and job market trends. Our mission is to simplify the resume screening process and 
-        enhance job seekers' chances of getting hired.
-        
-        ### Features:
-        - 🚀 Resume Parsing & Skill Extraction  
-        - 🔍 AI-Powered Job Recommendations  
-        - 📊 Insights for Recruiters & HR  
-        - 🎓 Course & Certification Suggestions  
+        col1, col2 = st.columns([1, 4])
 
-        ### Technologies Used:
-        - 🧠 Natural Language Processing (NLP)  
-        - 🔥 Streamlit for Web UI  
-        - 🗃️ SQLite Database  
-        - 🏆 AI & Machine Learning Algorithms  
-        """)
+        with col1:
+            img = Image.open("./Logo/trans_bg.png")  # Ensure the logo exists
+            st.image(img, width=100)  # Logo
 
-        # st.image("./Logo/SRA_Logo.jpg", use_column_width=True) 
-        home_img = Image.open("./Logo/SRA_Logo.jpg")  # Ensure this image exists in your project folder
-        st.image(home_img, use_container_width=True)  # Ensure this image exists in your project
+        with col2:
+            st.title("ℹ️ About Smart Resume Analyzer")
 
+        st.write("---")  # Divider Line
+
+        ## 🏆 Introduction Section
+        with st.container():
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#1e3a8a; color:white; text-align:center;">
+                    <h2>📄 AI-Powered Resume Screening</h2>
+                    <p><b>Smart Resume Analyzer</b> is an advanced AI tool that simplifies hiring by 
+                    analyzing resumes and ranking candidates instantly.</p>
+                    <p>🚀 <b>Enhance your resume, get AI-powered insights, and increase your chances of landing a job!</b></p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## 🔹 Why We Built This Section
+        st.markdown("<h3 style='text-align: center;'>🔹 Why We Built This?</h3>", unsafe_allow_html=True)
+        with st.container():
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#4CAF50; color:white; text-align:center;">
+                    <p>💡 Traditional resume screening is **time-consuming & inefficient**.</p>
+                    <p>💡 Recruiters struggle with **manual sorting & shortlisting**.</p>
+                    <p>💡 We leverage **AI & NLP** to make resume analysis **smarter & faster**.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## ✅ Key Features Section
+        st.markdown("<h3 style='text-align: center;'>✅ Key Features</h3>", unsafe_allow_html=True)
+        col1, col2, col3 = st.columns(3)
+
+        with col1:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#f39c12; color:white; text-align:center;">
+                    <h4>🤖 AI-Powered Resume Analysis</h4>
+                    <p>Instantly analyze resumes using **Machine Learning & NLP**.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#3498db; color:white; text-align:center;">
+                    <h4>📊 Resume Scoring</h4>
+                    <p>Get an **AI-generated resume score** based on job relevance.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with col3:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#9b59b6; color:white; text-align:center;">
+                    <h4>🎯 Career Suggestions</h4>
+                    <p>Receive **personalized recommendations** to improve your resume.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## 🔧 Technology Stack Section
+        st.markdown("<h3 style='text-align: center;'>🔧 Technology Stack</h3>", unsafe_allow_html=True)
+        with st.container():
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#2c3e50; color:white; text-align:center;">
+                    <p>✅ **Machine Learning (ML) & Natural Language Processing (NLP)**</p>
+                    <p>✅ **TF-IDF & Cosine Similarity for Text Matching**</p>
+                    <p>✅ **Python, Streamlit, SQLite for Backend Processing**</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## 🌍 Future Enhancements
+        st.markdown("<h3 style='text-align: center;'>🌍 Future Enhancements</h3>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#e74c3c; color:white; text-align:center;">
+                    <h4>🔗 LinkedIn & GitHub Analysis</h4>
+                    <p>Analyze LinkedIn & GitHub profiles for job matching.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        with col2:
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#16a085; color:white; text-align:center;">
+                    <h4>📢 AI-Based Job Recommendations</h4>
+                    <p>Suggest best job roles based on resume & skills.</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## 👥 Team & Contact Section
+        st.markdown("<h3 style='text-align: center;'>👥 Meet Our Team</h3>", unsafe_allow_html=True)
+        with st.container():
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#34495e; color:white; text-align:center;">
+                    <p>💡 <b>Project Lead:</b> John Doe</p>
+                    <p>💡 <b>AI Developer:</b> Jane Smith</p>
+                    <p>💡 <b>Backend Developer:</b> Alex Johnson</p>
+                    <p>💡 <b>Frontend & UI Designer:</b> Emily Davis</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.write("---")  # Divider Line
+
+        ## 📞 Contact Us Section
+        st.markdown("<h3 style='text-align: center;'>📞 Contact Us</h3>", unsafe_allow_html=True)
+        with st.container():
+            st.markdown(
+                """
+                <div style="padding:15px; border-radius:10px; background:#1abc9c; color:white; text-align:center;">
+                    <p>📩 <b>Email:</b> support@smartresume.com</p>
+                    <p>🌐 <b>Website:</b> www.smartresume.com</p>
+                    <p>📍 <b>Location:</b> San Francisco, CA</p>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        st.success("📢 Have questions? Reach out to us anytime! 🚀")
     elif choice == "📞 Contact":
-        st.subheader("Contact Us 📞")
-        st.write("Have any questions or need support? Feel free to reach out to us!")
+        st.markdown("## 📞 Contact Us")
+        st.write("Have any questions or need support? Fill out the form below, and we will get back to you!")
 
-        # Contact Form
-        contact_name = st.text_input("Your Name")
-        contact_email = st.text_input("Your Email")
-        contact_message = st.text_area("Your Message")
+        st.write("---")  # Divider Line
 
-        if st.button("Send Message"):
-            if contact_name and contact_email and contact_message:
-                st.success("Thank you! Your message has been sent successfully. 📩")
+        ## 📝 Contact Form
+        st.markdown("### 📝 Send Us a Message")
+        contact_name = st.text_input("👤 Your Name")
+        contact_email = st.text_input("📧 Your Email")
+        contact_subject = st.text_input("✉️ Subject")
+        contact_message = st.text_area("💬 Your Message")
+
+        if st.button("📩 Send Message"):
+            if contact_name and contact_email and contact_subject and contact_message:
+                email_sent = send_email(contact_name, contact_email, contact_subject, contact_message)
+                if email_sent:
+                    st.success("✅ Thank you! Your message has been sent successfully. Our team will respond soon. 📩")
+                    st.balloons()  # 🎈 Fun Animation
+                else:
+                    st.error("❌ There was an issue sending your message. Please try again.")
             else:
-                st.error("Please fill in all the fields before submitting.")
+                st.error("❌ Please fill in all the fields before submitting.")
 
-        # Additional Contact Information
+        st.write("---")  # Divider Line
+
+        ## 📞 Customer Support Details
+        st.markdown("### 📞 Customer Support")
         st.write("""
-        **📍 Office Address:**  
-        AI Solutions Pvt Ltd,  
-        123 Tech Street, Bengaluru, India  
-        
-        **📧 Email:** support@smartresume.com  
-        **📞 Phone:** +91 98765 43210  
-        **🌐 Website:** [www.smartresume.com](https://www.smartresume.com)  
+        **📩 Email Support:**  
+        - General Inquiries: **support@smartresume.com**  
+        - Technical Issues: **techsupport@smartresume.com**  
+        - Business & Partnerships: **business@smartresume.com**  
+
+        **📞 Phone Support:**  
+        - India: **+91 98765 43210**  
+        - USA: **+1 (415) 678-9012**  
         """)
 
+        st.success("📢 Need further assistance? Contact our support team anytime!")
     elif choice == "🚪 Logout":
         # Clear user session
         st.session_state["logged_in"] = False
